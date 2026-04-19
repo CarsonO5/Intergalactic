@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Google Classroom – Period 3</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@300;400;500;600&display=swap');
+:root{--bg:#04040F;--surface:rgba(255,255,255,0.04);--surface2:rgba(255,255,255,0.07);--border:rgba(255,255,255,0.09);--cyan:#00D4FF;--purple:#7C3AED;--pink:#F472B6;--green:#34D399;--amber:#FBBF24;--red:#F87171;--text:#E2E8F0;--muted:#64748B;--sw:220px;--font:'Inter',system-ui,sans-serif;--title:'Orbitron','Courier New',monospace;}
+*{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;overflow:hidden;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;}
+#stars-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.star{position:absolute;border-radius:50%;background:white;animation:twinkle linear infinite;}
+@keyframes twinkle{0%,100%{opacity:.08}50%{opacity:.85}}
+.nebula{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;opacity:.1;animation:drift 22s ease-in-out infinite alternate;}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(25px,18px)}}
+
+/* SETUP */
+#setup{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(4,4,15,.97);backdrop-filter:blur(8px);}
+#setup.hidden{display:none;}
+.sc{width:460px;background:rgba(10,10,24,.98);border:1px solid rgba(0,212,255,.18);border-radius:20px;padding:40px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.7);}
+.ss{display:none;flex-direction:column;align-items:center;gap:18px;}.ss.active{display:flex;}
+.s-icon{font-size:52px;line-height:1;}
+.s-title{font-family:var(--title);font-size:18px;font-weight:700;letter-spacing:2px;background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.s-sub{font-size:13px;color:var(--muted);line-height:1.7;max-width:340px;}
+.s-opts{display:flex;flex-direction:column;gap:10px;width:100%;}
+.s-opt{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .15s;text-align:left;}
+.s-opt:hover,.s-opt.sel{border-color:var(--cyan);background:rgba(0,212,255,.07);}
+.s-opt .oi{font-size:24px;width:32px;text-align:center;flex-shrink:0;}
+.s-opt .ol{font-size:13px;font-weight:600;}.s-opt .os{font-size:11px;color:var(--muted);margin-top:2px;}
+.s-opt .od{width:18px;height:18px;border-radius:50%;border:2px solid var(--muted);margin-left:auto;flex-shrink:0;transition:all .15s;}
+.s-opt.sel .od{background:var(--cyan);border-color:var(--cyan);}
+.dis-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;}
+.dis-card{padding:14px 10px;border-radius:12px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.dis-card:hover,.dis-card.sel{border-color:var(--cyan);background:rgba(0,212,255,.07);}
+.dis-icon{font-size:26px;}.dis-name{font-size:12px;font-weight:600;}
+.s-dots{display:flex;gap:6px;justify-content:center;}
+.pd{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .3s;}.pd.on{background:var(--cyan);}
+.s-btns{display:flex;gap:10px;width:100%;margin-top:6px;}
+.s-next{flex:1;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--cyan),var(--purple));border:none;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);}
+.s-skip{height:44px;padding:0 18px;border-radius:12px;background:none;border:1px solid var(--border);color:var(--muted);font-size:13px;cursor:pointer;font-family:var(--font);}
+.s-skip:hover{border-color:var(--muted);color:var(--text);}
+.s-check{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 8px 32px rgba(52,211,153,.35);}
+.key-box{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);border-radius:10px;padding:12px 24px;font-family:var(--title);font-size:16px;color:var(--cyan);letter-spacing:4px;}
+
+/* APP */
+#app{display:none;position:fixed;inset:0;z-index:1;flex-direction:row;}
+#app.show{display:flex;}
+
+/* SIDEBAR */
+#sb{width:var(--sw);height:100%;background:rgba(5,5,16,.93);backdrop-filter:blur(20px);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:100;}
+.sb-logo{padding:20px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.sb-li{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--cyan),var(--purple));display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.sb-lt{font-family:var(--title);font-size:9px;font-weight:700;letter-spacing:3px;background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.4;}
+.sb-nav{flex:1;padding:10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
+.sbl{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:10px;color:var(--muted);cursor:pointer;transition:all .15s;font-size:13px;font-weight:500;border:1px solid transparent;text-decoration:none;}
+.sbl:hover{color:var(--text);background:var(--surface);}
+.sbl.on{color:var(--cyan);background:rgba(0,212,255,.08);border-color:rgba(0,212,255,.14);}
+.sbl i{width:17px;text-align:center;font-size:13px;}
+.sb-bot{padding:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:2px;}
+
+/* MAIN */
+#main{flex:1;overflow:hidden;position:relative;}
+.view{display:none;height:100%;overflow-y:auto;position:absolute;inset:0;}
+.view.on{display:block;}
+#v-home{display:none;overflow:hidden;}.v-home-flex{display:flex;height:100%;}
+
+/* HOME */
+.hl{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 48px;z-index:2;}
+.hl h1{font-family:var(--title);font-size:clamp(22px,3vw,38px);font-weight:900;line-height:1.2;}
+.tw{background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.tc{display:inline-block;width:3px;height:.85em;background:var(--cyan);margin-left:2px;animation:bl .7s step-end infinite;vertical-align:text-bottom;}
+@keyframes bl{50%{opacity:0}}
+.h-desc{font-size:14px;color:var(--muted);line-height:1.7;margin-top:14px;max-width:380px;}
+.h-ctas{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap;}
+.h-cta{height:42px;padding:0 22px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);display:flex;align-items:center;gap:8px;text-decoration:none;transition:all .15s;}
+.h-cta.pri{background:linear-gradient(135deg,var(--cyan),var(--purple));color:white;}
+.h-cta.pri:hover{filter:brightness(1.1);}
+.h-cta.sec{background:var(--surface);border:1px solid var(--border);color:var(--text);}
+.h-cta.sec:hover{border-color:var(--cyan);color:var(--cyan);}
+.h-pills{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap;}
+.h-pill{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;cursor:pointer;transition:all .15s;}
+.h-pill:hover{border-color:var(--cyan);color:var(--cyan);}
+.hr{width:320px;height:100%;overflow:hidden;display:flex;gap:8px;padding:10px 10px 10px 0;flex-shrink:0;position:relative;}
+.hr::before{content:'';position:absolute;inset:0;background:linear-gradient(to right,var(--bg) 0%,transparent 20%,transparent 80%,var(--bg) 100%);pointer-events:none;z-index:2;}
+.hcol{display:flex;flex-direction:column;gap:8px;flex:1;}
+.hcol:nth-child(2){margin-top:-50px;}.hcol:nth-child(3){margin-top:30px;}
+.htrack{display:flex;flex-direction:column;gap:8px;animation:sup 30s linear infinite;}
+.hcol:nth-child(2) .htrack{animation:sdn 38s linear infinite;}
+.hcol:nth-child(3) .htrack{animation:sup 24s linear infinite;}
+@keyframes sup{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+@keyframes sdn{0%{transform:translateY(-50%)}100%{transform:translateY(0)}}
+.hcard{width:100%;aspect-ratio:1;border-radius:10px;overflow:hidden;position:relative;cursor:pointer;flex-shrink:0;}
+.hcard img{width:100%;height:100%;object-fit:cover;display:block;}
+.hcov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 60%);opacity:0;transition:opacity .2s;display:flex;align-items:flex-end;padding:8px;}
+.hcard:hover .hcov{opacity:1;}.hcov span{font-size:10px;font-weight:600;color:white;}
+
+/* VIEW HEADER */
+.vh{padding:22px 24px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.vt{font-family:var(--title);font-size:11px;font-weight:700;letter-spacing:3px;}
+
+/* GAMES */
+.gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;padding:14px 18px;overflow-y:auto;height:calc(100% - 64px);}
+.gcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .15s;}
+.gcard:hover{border-color:rgba(52,211,153,.4);transform:translateY(-3px);}
+.gcard img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.gci{padding:8px 10px;}.gcn{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#goverlay{position:fixed;inset:0;z-index:5000;background:rgba(4,4,15,.95);display:none;flex-direction:column;}
+#goverlay.show{display:flex;}
+.gobar{height:40px;background:rgba(6,6,18,.98);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 14px;flex-shrink:0;}
+.gox{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;}.gox:hover{color:var(--red);}
+.got{font-size:12px;font-weight:600;}.goe{margin-left:auto;font-size:11px;color:var(--cyan);text-decoration:none;}
+#gframe{flex:1;border:none;width:100%;}
+
+/* BROWSER - Nexora style */
+.brshell{display:flex;flex-direction:column;height:100%;overflow:hidden;}
+.br-tab-bar{background:rgba(255,255,255,.04);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:flex-end;padding:8px 8px 0;gap:4px;overflow-x:auto;overflow-y:hidden;flex-shrink:0;}
+.br-tab-bar::-webkit-scrollbar{height:0;}
+.br-tab{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,255,255,.05);backdrop-filter:blur(12px);border-radius:8px 8px 0 0;min-width:120px;max-width:200px;cursor:pointer;border:1px solid rgba(255,255,255,.06);border-bottom:none;transition:all .2s;font-size:12px;font-weight:500;color:var(--muted);}
+.br-tab:hover{background:rgba(255,255,255,.1);}
+.br-tab.active{background:rgba(10,10,24,.9);border-color:rgba(255,255,255,.1);color:var(--text);margin-bottom:-1px;}
+.br-tab img{width:14px;height:14px;flex-shrink:0;}
+.br-tab span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.br-tab-close{width:16px;height:16px;border-radius:3px;border:none;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.6;transition:all .15s;flex-shrink:0;}
+.br-tab-close:hover{opacity:1;background:rgba(248,113,113,.2);color:var(--red);transform:rotate(90deg);}
+.br-new-tab{padding:8px 12px;background:transparent;border:none;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;font-size:18px;display:flex;align-items:center;justify-content:center;opacity:.7;transition:all .2s;}
+.br-new-tab:hover{opacity:1;background:rgba(255,255,255,.08);transform:scale(1.15) rotate(90deg);}
+.br-nav{background:rgba(255,255,255,.03);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);padding:10px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.br-nav-btn{width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.05);backdrop-filter:blur(8px);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;}
+.br-nav-btn:hover:not(:disabled){background:rgba(255,255,255,.12);color:var(--text);transform:scale(1.08);}
+.br-nav-btn:active:not(:disabled){transform:scale(.95);}
+.br-nav-btn:disabled{opacity:.3;cursor:not-allowed;}
+.br-addr{flex:1;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);backdrop-filter:blur(12px);border-radius:20px;padding:7px 14px;border:1px solid rgba(255,255,255,.08);transition:all .2s;}
+.br-addr:focus-within{border-color:rgba(124,58,237,.5);box-shadow:0 0 0 2px rgba(124,58,237,.15);}
+.br-addr-icon{font-size:13px;color:var(--muted);}
+.br-addr input{flex:1;background:transparent;border:none;color:var(--text);font-size:13px;font-family:var(--font);outline:none;}
+.br-addr input::placeholder{color:var(--muted);}
+.br-content{flex:1;position:relative;overflow:hidden;}
+.br-welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px;text-align:center;animation:bwfade .5s ease-out;}
+@keyframes bwfade{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+.br-welcome h1{font-size:42px;font-weight:700;margin-bottom:12px;background:linear-gradient(135deg,var(--cyan),var(--purple),var(--cyan));background-size:200% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:bwgrad 3s ease-in-out infinite;}
+@keyframes bwgrad{0%,100%{background-position:0% center}50%{background-position:100% center}}
+.br-welcome p{font-size:16px;color:var(--muted);margin-bottom:32px;}
+.br-wsearch{width:100%;max-width:560px;margin-bottom:32px;display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);backdrop-filter:blur(16px);border-radius:28px;padding:14px 22px;border:1px solid rgba(255,255,255,.08);transition:all .2s;}
+.br-wsearch:focus-within{background:rgba(255,255,255,.1);border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.12),0 4px 20px rgba(0,0,0,.2);transform:scale(1.01);}
+.br-wsearch i{color:var(--muted);font-size:16px;}
+.br-wsearch input{flex:1;background:transparent;border:none;color:var(--text);font-size:15px;font-family:var(--font);outline:none;}
+.br-wsearch input::placeholder{color:var(--muted);}
+.br-shortcuts{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;max-width:560px;width:100%;}
+.br-sc{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 12px;background:rgba(255,255,255,.05);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.07);border-radius:14px;cursor:pointer;transition:all .2s;text-decoration:none;color:var(--text);font-family:var(--font);border:none;}
+.br-sc:hover{background:rgba(255,255,255,.1);transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.25);}
+.br-sc img{width:32px;height:32px;transition:transform .2s;}
+.br-sc:hover img{transform:scale(1.15) rotate(5deg);}
+.br-sc span{font-size:12px;font-weight:500;}
+.br-frame{position:absolute;inset:0;width:100%;height:100%;border:none;display:none;}
+.br-frame.active{display:block;}
+.br-blocked{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--bg);padding:40px;text-align:center;}
+.br-blocked.show{display:flex;}
+.br-blocked-icon{font-size:48px;opacity:.5;}
+.br-blocked h3{font-size:18px;color:var(--text);}
+.br-blocked p{font-size:13px;color:var(--muted);max-width:360px;line-height:1.7;}
+.br-open-btn{height:40px;padding:0 24px;border-radius:10px;background:linear-gradient(135deg,var(--cyan),var(--purple));border:none;color:white;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);}
+
+/* YOUTUBE - loads Invidious in iframe */
+.ytsh{display:flex;flex-direction:column;height:100%;background:#0a0a14;}
+.ytt{height:48px;background:rgba(6,6,14,.9);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px;padding:0 14px;flex-shrink:0;backdrop-filter:blur(10px);}
+.ytl{color:#FF0000;font-size:18px;font-weight:900;}
+.ytq{flex:1;height:32px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:0 14px;color:white;font-size:12px;outline:none;font-family:var(--font);}
+.ytq:focus{border-color:#FF4444;}
+.ytsb{height:32px;width:40px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:20px;color:#aaa;cursor:pointer;font-size:13px;transition:background .15s;}
+.ytsb:hover{background:rgba(255,0,0,.2);color:white;}
+.ytbk{height:32px;width:32px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#aaa;cursor:pointer;font-size:13px;transition:all .15s;}
+.ytbk:hover{background:rgba(255,255,255,.15);color:white;}
+.ytpow{font-size:9px;color:rgba(255,255,255,.2);padding:0 4px;}
+.ythome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#aaa;padding:30px;}
+.ytbig{width:80px;height:80px;background:rgba(255,0,0,.12);border:2px solid rgba(255,0,0,.25);border-radius:20px;display:flex;align-items:center;justify-content:center;color:#FF0000;font-size:36px;}
+.ytur{display:flex;gap:8px;}
+.ytui{width:265px;height:36px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:0 14px;color:white;font-size:12px;outline:none;font-family:var(--font);}
+.ytui:focus{border-color:#FF4444;}
+.ytpl{height:36px;padding:0 20px;background:#FF0000;border:none;border-radius:10px;color:white;font-size:12px;font-weight:700;cursor:pointer;transition:filter .15s;}
+.ytpl:hover{filter:brightness(1.1);}
+.ytpks{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.ytpk{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 16px;color:#888;font-size:11px;cursor:pointer;transition:all .15s;}
+.ytpk:hover{background:rgba(255,0,0,.12);border-color:rgba(255,0,0,.3);color:white;}
+#ytframe{flex:1;border:none;width:100%;display:none;}
+
+/* MOVIES */
+.mvsh{display:flex;flex-direction:column;height:100%;background:#0D0D16;}
+.mvtop{height:50px;background:rgba(6,6,18,.8);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 16px;flex-shrink:0;}
+.mvlog{font-family:var(--title);font-size:10px;font-weight:700;letter-spacing:3px;background:linear-gradient(90deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.mvs{flex:1;height:30px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0 12px;color:var(--text);font-size:12px;outline:none;}
+.mvs:focus{border-color:var(--pink);}
+.mvext{height:30px;padding:0 14px;background:rgba(244,114,182,.1);border:1px solid rgba(244,114,182,.25);border-radius:8px;color:var(--pink);font-size:11px;cursor:pointer;}
+.mvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px;padding:14px 16px;overflow-y:auto;flex:1;}
+.mvcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .15s;}
+.mvcard:hover{border-color:rgba(244,114,182,.3);transform:translateY(-3px);}
+.mvposter{height:138px;display:flex;align-items:center;justify-content:center;font-size:40px;background:var(--surface2);}
+.mvi{padding:8px 10px;}.mvn{font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.mvy{font-size:9px;color:var(--muted);margin-top:2px;}
+.mvbk{background:var(--surface);border:none;border-bottom:1px solid var(--border);color:var(--cyan);padding:8px 16px;cursor:pointer;font-size:11px;text-align:left;flex-shrink:0;font-family:var(--font);}
+.mvbk:hover{background:var(--surface2);}
+#mvframe{flex:1;border:none;width:100%;}
+
+/* MUSIC */
+.mush{display:flex;height:100%;}
+.muplayer{width:290px;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px 18px;background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.12),transparent 70%);}
+.muart{width:120px;height:120px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:52px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.22);}
+.muart.spin{animation:mspin 6s linear infinite;}@keyframes mspin{to{transform:rotate(360deg)}}
+.muname{font-size:14px;font-weight:600;text-align:center;}.muart2{font-size:11px;color:var(--muted);text-align:center;margin-top:3px;}
+.muprog{width:100%;height:3px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;}
+.mufill{height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:2px;transition:width .5s;}
+.mutimes{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:3px;}
+.muctrl{display:flex;align-items:center;gap:14px;}
+.mucb{background:none;border:none;color:rgba(255,255,255,.5);font-size:19px;cursor:pointer;}.mucb:hover{color:var(--text);}
+.muplay{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--cyan));border:none;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(124,58,237,.4);}
+.muplay:hover{filter:brightness(1.1);}
+.mulist{flex:1;overflow-y:auto;padding:10px;}
+.mulhead{font-family:var(--title);font-size:9px;letter-spacing:3px;color:var(--muted);padding:12px 12px 6px;}
+.mulitem{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:background .1s;}
+.mulitem:hover{background:var(--surface);}
+.mulitem.on{background:rgba(124,58,237,.1);color:var(--cyan);}
+.muln{width:16px;text-align:center;font-size:10px;color:var(--muted);}
+.mulic{font-size:18px;}.mulinf{flex:1;}.mult{font-size:12px;font-weight:500;}.mula{font-size:10px;color:var(--muted);}.muld{font-size:10px;color:var(--muted);}
+
+/* LINK FINDER */
+.lfsh{height:100%;display:flex;flex-direction:column;}
+.lfin{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;}
+.lfc{max-width:500px;width:100%;background:rgba(255,255,255,.03);backdrop-filter:blur(18px);border:1px solid var(--border);border-radius:24px;padding:36px 28px;text-align:center;}
+.lftitle{font-family:var(--title);font-size:22px;font-weight:800;letter-spacing:2px;background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+.lfsub{font-size:13px;color:var(--muted);margin-bottom:26px;}
+.lflabel{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-bottom:10px;text-align:left;}
+.lfchips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:24px;}
+.lfchip{padding:7px 16px;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.lfchip:hover{border-color:rgba(0,212,255,.3);color:var(--cyan);}
+.lfchip.on{background:rgba(0,212,255,.1);border-color:var(--cyan);color:var(--cyan);}
+.lffind{width:100%;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--cyan),var(--purple));border:none;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);transition:filter .15s,transform .15s;}
+.lffind:hover:not(:disabled){filter:brightness(1.1);transform:translateY(-2px);}
+.lffind:disabled{opacity:.35;cursor:not-allowed;}
+.lfres{display:none;flex-direction:column;align-items:center;gap:16px;width:100%;}
+.lfres.show{display:flex;}
+.lfcnt{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.4px;}
+.lfbadge{display:inline-block;padding:4px 14px;border-radius:10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);color:var(--cyan);}
+.lfbig{width:100%;padding:40px 24px;background:linear-gradient(135deg,var(--cyan),var(--purple));border-radius:20px;border:none;color:white;font-size:18px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:12px;transition:transform .2s,box-shadow .2s;box-shadow:0 8px 32px rgba(0,212,255,.22);font-family:var(--font);}
+.lfbig i{font-size:36px;}.lfbig:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,212,255,.35);}
+.lfnav{display:flex;gap:10px;}
+.lfnbtn{flex:1;height:40px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);}
+.lfnbtn:hover:not(:disabled){color:var(--cyan);border-color:rgba(0,212,255,.3);}
+.lfnbtn:disabled{opacity:.28;cursor:not-allowed;}
+.lfbkbtn{width:100%;height:40px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;font-family:var(--font);}
+.lfbkbtn:hover{color:var(--cyan);border-color:rgba(0,212,255,.3);}
+
+/* SETTINGS */
+.setwrap{padding:24px 28px;max-width:560px;}
+.setsec{margin-bottom:26px;}.setsec-title{font-family:var(--title);font-size:9px;letter-spacing:4px;color:var(--muted);margin-bottom:12px;}
+.setrow{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;}
+.srl .srl-l{font-size:13px;font-weight:500;}.srl .srl-s{font-size:11px;color:var(--muted);margin-top:2px;}
+.seti{height:30px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:0 10px;color:var(--text);font-size:12px;outline:none;width:160px;font-family:var(--font);}
+.seti:focus{border-color:var(--cyan);}
+.setsave{height:36px;padding:0 20px;border-radius:10px;background:linear-gradient(135deg,var(--cyan),var(--purple));border:none;color:white;font-size:12px;font-weight:600;cursor:pointer;margin-top:6px;font-family:var(--font);}
+.dismini{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.dm{padding:5px 13px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;cursor:pointer;transition:all .12s;}
+.dm:hover,.dm.on{border-color:var(--cyan);color:var(--cyan);background:rgba(0,212,255,.07);}
+.setabout{background:linear-gradient(135deg,rgba(0,212,255,.05),rgba(124,58,237,.05));border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;}
+.san{font-family:var(--title);font-size:12px;font-weight:700;letter-spacing:3px;background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sav{font-size:11px;color:var(--muted);margin-top:4px;}
+</style>
+<!-- Scramjet proxy scripts (only active when hosted on the Node.js server) -->
+<script src="/scramjet/scramjet.codecs.js" onerror="window.__sjReady=false"></script>
+<script src="/scramjet/scramjet.config.js" onerror="window.__sjReady=false"></script>
+<script>
+// Register Scramjet service worker for real proxying
+window.__sjReady = false;
+(async()=>{
+  if(!('serviceWorker' in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.register('/scramjet/scramjet.sw.js', { scope: '/scramjet/service/' });
+    await navigator.serviceWorker.ready;
+    window.__sjReady = true;
+    console.log('Scramjet proxy ready ✓');
+  } catch(e) {
+    console.log('Scramjet not available (static hosting) - using iframe fallback');
+  }
+})();
+
+// Helper: encode a URL through Scramjet
+function sjEncode(url) {
+  if (window.__sjReady && typeof __scramjet$config !== 'undefined') {
+    return __scramjet$config.prefix + encodeURIComponent(url);
+  }
+  return null; // fall back to direct iframe
+}
+</script>
+</head>
+<body>
+<div id="stars-bg"></div>
+<div class="nebula" style="width:500px;height:500px;background:radial-gradient(var(--purple),transparent);top:-100px;left:-100px;"></div>
+<div class="nebula" style="width:400px;height:400px;background:radial-gradient(var(--cyan),transparent);bottom:-50px;right:-50px;animation-delay:-10s;"></div>
+
+<!-- ══ SETUP ══ -->
+<div id="setup">
+<div class="sc">
+  <div class="s-dots" id="sdots"></div>
+  <div class="ss active" id="step-1">
+    <div class="s-icon">🌌</div>
+    <div class="s-title">INTERGALACTIC</div>
+    <div class="s-sub">The next-generation unblocked site. Fast, sleek, and built for space.</div>
+    <div class="s-btns"><button class="s-next" onclick="nxt()">Get Started →</button></div>
+  </div>
+  <div class="ss" id="step-2">
+    <div class="s-icon">🛡️</div>
+    <div class="s-title">HIDE YOUR SCREEN?</div>
+    <div class="s-sub">Open INTERGALACTIC inside a blank-looking tab. Your activity stays invisible.</div>
+    <div class="s-opts">
+      <div class="s-opt sel" id="hide-yes" onclick="so('hide','yes')"><span class="oi">🕵️</span><div><div class="ol">Yes, hide it</div><div class="os">Tab looks like a school page. Recommended.</div></div><div class="od"></div></div>
+      <div class="s-opt" id="hide-no" onclick="so('hide','no')"><span class="oi">👁️</span><div><div class="ol">No thanks</div><div class="os">Site stays visible in browser history.</div></div><div class="od"></div></div>
+    </div>
+    <div class="s-btns"><button class="s-skip" onclick="nxt()">Skip</button><button class="s-next" onclick="nxt()">Next →</button></div>
+  </div>
+  <div class="ss" id="step-3">
+    <div class="s-icon">🎭</div>
+    <div class="s-title">PICK A DISGUISE</div>
+    <div class="s-sub">Changes what your browser tab shows so nobody knows what you're up to.</div>
+    <div class="dis-grid">
+      <div class="dis-card sel" onclick="sd(this,'Google Classroom – Period 3','https://classroom.google.com')"><div class="dis-icon">📗</div><div class="dis-name">Google Classroom</div></div>
+      <div class="dis-card" onclick="sd(this,'Clever – Student Portal','https://clever.com/in/school')"><div class="dis-icon">🔵</div><div class="dis-name">Clever</div></div>
+      <div class="dis-card" onclick="sd(this,'Canvas – Dashboard','https://canvas.instructure.com')"><div class="dis-icon">🔺</div><div class="dis-name">Canvas</div></div>
+      <div class="dis-card" onclick="sd(this,'Google Drive – My Drive','https://drive.google.com')"><div class="dis-icon">📁</div><div class="dis-name">Google Drive</div></div>
+      <div class="dis-card" onclick="sd(this,'Seesaw – Class Activities','https://app.seesaw.me')"><div class="dis-icon">🟣</div><div class="dis-name">Seesaw</div></div>
+      <div class="dis-card" onclick="sd(this,'Edpuzzle – My Classes','https://edpuzzle.com')"><div class="dis-icon">🟢</div><div class="dis-name">Edpuzzle</div></div>
+    </div>
+    <div class="s-btns"><button class="s-skip" onclick="nxt()">Skip</button><button class="s-next" onclick="nxt()">Next →</button></div>
+  </div>
+  <div class="ss" id="step-4">
+    <div class="s-icon">⚡</div>
+    <div class="s-title">PANIC KEY</div>
+    <div class="s-sub">Press this combo anytime to instantly open your disguise page in a new tab.</div>
+    <div class="key-box">SHIFT + C</div>
+    <div class="s-sub" style="font-size:11px;">Opens your disguise site instantly. Change it anytime in Settings.</div>
+    <div class="s-btns"><button class="s-next" onclick="nxt()">Got It →</button></div>
+  </div>
+  <div class="ss" id="step-5">
+    <div class="s-icon">💾</div>
+    <div class="s-title">SAVE YOUR STUFF?</div>
+    <div class="s-sub">Remember your settings and disguise between visits using your browser.</div>
+    <div class="s-opts">
+      <div class="s-opt sel" id="save-yes" onclick="so('save','yes')"><span class="oi">✅</span><div><div class="ol">Yes, remember me</div><div class="os">Settings and disguise stay saved.</div></div><div class="od"></div></div>
+      <div class="s-opt" id="save-no" onclick="so('save','no')"><span class="oi">🚫</span><div><div class="ol">No thanks</div><div class="os">Nothing saves. Redo settings every visit.</div></div><div class="od"></div></div>
+    </div>
+    <div class="s-btns"><button class="s-next" onclick="finish()">Finish →</button></div>
+  </div>
+  <div class="ss" id="step-6">
+    <div class="s-check">✓</div>
+    <div class="s-title">YOU'RE ALL SET!</div>
+    <div class="s-sub">INTERGALACTIC is configured. Welcome to the cosmos.</div>
+    <div class="s-btns"><button class="s-next" onclick="launch()">🚀 Launch</button></div>
+  </div>
+</div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <aside id="sb">
+    <div class="sb-logo">
+      <div class="sb-li">🌌</div>
+      <div class="sb-lt">INTER<br>GALACTIC</div>
+    </div>
+    <nav class="sb-nav">
+      <a class="sbl on" onclick="sv('home')" data-v="home"><i class="fas fa-home"></i><span>Home</span></a>
+      <a class="sbl" onclick="sv('games')" data-v="games"><i class="fas fa-gamepad"></i><span>Games</span></a>
+      <a class="sbl" onclick="sv('browser')" data-v="browser"><i class="fas fa-globe"></i><span>Browser</span></a>
+      <a class="sbl" onclick="sv('youtube')" data-v="youtube"><i class="fab fa-youtube"></i><span>YouTube</span></a>
+      <a class="sbl" onclick="sv('movies')" data-v="movies"><i class="fas fa-film"></i><span>Movies</span></a>
+      <a class="sbl" onclick="sv('music')" data-v="music"><i class="fas fa-music"></i><span>Music</span></a>
+    </nav>
+    <div class="sb-bot">
+      <a class="sbl" onclick="sv('linkfinder')" data-v="linkfinder"><i class="fas fa-search"></i><span>Link Finder</span></a>
+      <a class="sbl" href="https://discord.com/invite/wSBXKbGepr" target="_blank"><i class="fab fa-discord"></i><span>Discord</span></a>
+      <a class="sbl" onclick="sv('settings')" data-v="settings"><i class="fas fa-cog"></i><span>Settings</span></a>
+    </div>
+  </aside>
+  <main id="main">
+
+    <!-- HOME -->
+    <div id="v-home" class="view" style="display:none;">
+      <div class="v-home-flex">
+        <div class="hl">
+          <h1>INTERGALACTIC<br>is <span class="tw" id="tword">unblocked</span><span class="tc"></span></h1>
+          <p class="h-desc">The next-gen unblocked site. Fast, hidden, and infinitely free. No limits.</p>
+          <div class="h-ctas">
+            <a class="h-cta pri" onclick="sv('games')"><i class="fas fa-gamepad"></i> Start Playing</a>
+            <a class="h-cta sec" onclick="sv('browser')"><i class="fas fa-globe"></i> Open Browser</a>
+          </div>
+          <div class="h-pills">
+            <span class="h-pill" onclick="sv('browser')">🌐 Proxy</span>
+            <span class="h-pill" onclick="sv('movies')">🎬 Movies</span>
+            <span class="h-pill" onclick="sv('youtube')">▶️ YouTube</span>
+            <span class="h-pill" onclick="sv('music')">🎵 Music</span>
+            <span class="h-pill" onclick="sv('linkfinder')">🔗 Link Finder</span>
+          </div>
+        </div>
+        <div class="hr" id="hcols"></div>
+      </div>
+    </div>
+
+    <!-- GAMES -->
+    <div id="v-games" class="view">
+      <div style="display:flex;flex-direction:column;height:100%;">
+        <div class="vh"><span class="vt" style="background:linear-gradient(90deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ARCADE</span><span id="gcnt" style="font-size:11px;color:var(--muted);"></span></div>
+        <div class="gg" id="ggrid"></div>
+      </div>
+    </div>
+
+    <!-- BROWSER -->
+    <div id="v-browser" class="view">
+      <div class="brshell">
+        <!-- Tab Bar -->
+        <div class="br-tab-bar" id="br-tabbar">
+          <div class="br-tab active" id="br-tab-1">
+            <img src="https://www.google.com/s2/favicons?domain=duckduckgo.com&sz=32" alt="" id="br-fav-1" onerror="this.style.display='none'">
+            <span id="br-tabtitle-1">New Tab</span>
+            <button class="br-tab-close" onclick="brCloseTab(1)">×</button>
+          </div>
+          <button class="br-new-tab" onclick="brNewTab()" title="New tab">+</button>
+        </div>
+        <!-- Nav Bar -->
+        <div class="br-nav">
+          <div style="display:flex;gap:4px;">
+            <button class="br-nav-btn" id="br-back" onclick="brBack()" disabled title="Back"><i class="fas fa-arrow-left"></i></button>
+            <button class="br-nav-btn" id="br-fwd" onclick="brFwd()" disabled title="Forward"><i class="fas fa-arrow-right"></i></button>
+            <button class="br-nav-btn" id="br-refresh" onclick="brRefresh()" title="Refresh"><i class="fas fa-redo"></i></button>
+          </div>
+          <div class="br-addr">
+            <i class="fas fa-search br-addr-icon"></i>
+            <input id="brurl" placeholder="Search or enter URL" onkeydown="if(event.key==='Enter')brGo()" autocomplete="off">
+          </div>
+          <button class="br-nav-btn" onclick="brTab()" title="Open in new tab" style="margin-left:4px;font-size:13px;">↗</button>
+        </div>
+        <!-- Content -->
+        <div class="br-content">
+          <!-- Welcome screen -->
+          <div class="br-welcome" id="br-welcome">
+            <h1>INTERGALACTIC Browser</h1>
+            <p>Search the web or visit a website</p>
+            <div class="br-wsearch">
+              <i class="fas fa-search"></i>
+              <input placeholder="Search or enter URL" id="br-wsearch-input" onkeydown="if(event.key==='Enter')brSearchFromHome()" autocomplete="off">
+            </div>
+            <div class="br-shortcuts">
+              <button class="br-sc" onclick="brOpenUrl('https://yewtu.be')">
+                <img src="https://cdn.jsdelivr.net/gh/nexora240-lgtm/Nexora-Assets@main/proxy/youtube.png" alt="YouTube">
+                <span>YouTube</span>
+              </button>
+              <button class="br-sc" onclick="brOpenUrl('https://www.tiktok.com')">
+                <img src="https://cdn.jsdelivr.net/gh/nexora240-lgtm/Nexora-Assets@main/proxy/tiktok.png" alt="TikTok">
+                <span>TikTok</span>
+              </button>
+              <button class="br-sc" onclick="brOpenUrl('https://discord.com/app')">
+                <img src="https://cdn.jsdelivr.net/gh/nexora240-lgtm/Nexora-Assets@main/proxy/discord.png" alt="Discord">
+                <span>Discord</span>
+              </button>
+              <button class="br-sc" onclick="brOpenUrl('https://chatgpt.com')">
+                <img src="https://cdn.jsdelivr.net/gh/nexora240-lgtm/Nexora-Assets@main/proxy/openai.png" alt="ChatGPT">
+                <span>ChatGPT</span>
+              </button>
+              <button class="br-sc" onclick="brOpenUrl('https://twitch.tv')">
+                <img src="https://cdn.jsdelivr.net/gh/nexora240-lgtm/Nexora-Assets@main/proxy/twitch.png" alt="Twitch">
+                <span>Twitch</span>
+              </button>
+            </div>
+          </div>
+          <!-- Proxy iframe -->
+          <iframe id="brframe" class="br-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation allow-modals"></iframe>
+          <!-- Blocked fallback -->
+          <div class="br-blocked" id="br-blocked">
+            <div class="br-blocked-icon">🚫</div>
+            <h3>Site blocked iframes</h3>
+            <p id="br-blocked-url-text">This site doesn't allow embedding. Open it in a real browser tab instead.</p>
+            <button class="br-open-btn" id="br-open-real" onclick="brOpenBlocked()">Open in New Tab ↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- YOUTUBE -->
+    <div id="v-youtube" class="view">
+      <div class="ytsh">
+        <div class="ytt">
+          <span class="ytl">▶</span>
+          <span style="color:white;font-size:14px;font-weight:700;margin-right:6px;">YouTube</span>
+          <input class="ytq" id="ytq" placeholder="Search videos..." onkeydown="if(event.key==='Enter')ytSrch()">
+          <button class="ytsb" onclick="ytSrch()"><i class="fas fa-search"></i></button>
+          <button class="ytbk" onclick="ytHome()"><i class="fas fa-chevron-left"></i></button>
+          <span class="ytpow">via Invidious</span>
+        </div>
+        <div class="ythome" id="ythome">
+          <div class="ytbig"><i class="fab fa-youtube"></i></div>
+          <p style="font-size:13px;color:rgba(255,255,255,.6);">Paste a YouTube link or search above</p>
+          <div class="ytur">
+            <input class="ytui" id="ytid" placeholder="youtube.com/watch?v=... or video ID">
+            <button class="ytpl" onclick="ytLoad()">▶ Play</button>
+          </div>
+          <div class="ytpks">
+            <button class="ytpk" onclick="ytId('dQw4w9WgXcQ')">🎵 Rick Roll</button>
+            <button class="ytpk" onclick="ytId('9bZkp7q19f0')">🎵 Gangnam Style</button>
+            <button class="ytpk" onclick="ytId('kJQP7kiw5Fk')">🎵 Despacito</button>
+            <button class="ytpk" onclick="ytId('OPf0YbXqDm0')">🎵 Happy</button>
+            <button class="ytpk" onclick="ytId('JGwWNGJdvx8')">🎵 Shape of You</button>
+          </div>
+          <p style="font-size:10px;color:rgba(255,255,255,.2);margin-top:4px;">Search opens in Invidious (open-source YT frontend) · Embeds use youtube-nocookie.com</p>
+        </div>
+        <iframe id="ytframe" allow="autoplay;fullscreen" allowfullscreen></iframe>
+      </div>
+    </div>
+
+    <!-- MOVIES -->
+    <div id="v-movies" class="view">
+      <div class="mvsh">
+        <div class="mvtop">
+          <span class="mvlog">✦ STREAM</span>
+          <input class="mvs" placeholder="Search...">
+          <button class="mvext" onclick="brOpen('https://www.cineby.app')">Full Site ↗</button>
+        </div>
+        <div class="mvgrid" id="mvgrid"></div>
+        <div id="mvplayer" style="display:none;flex:1;flex-direction:column;">
+          <button class="mvbk" onclick="mvBk()"><i class="fas fa-chevron-left"></i> Back</button>
+          <iframe id="mvframe" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- MUSIC -->
+    <div id="v-music" class="view">
+      <div class="mush">
+        <div class="muplayer">
+          <div class="muart" id="muart">🎵</div>
+          <div><div class="muname" id="muname">Bliss</div><div class="muart2" id="muart2">Ambient Waves</div></div>
+          <div style="width:100%">
+            <div class="muprog" onclick="muScrub(event)"><div class="mufill" id="mufill" style="width:0%"></div></div>
+            <div class="mutimes"><span id="muel">0:00</span><span id="mudur">3:42</span></div>
+          </div>
+          <div class="muctrl">
+            <button class="mucb" onclick="muPrev()"><i class="fas fa-step-backward"></i></button>
+            <button class="muplay" id="muplaybtn" onclick="muToggle()"><i class="fas fa-play"></i></button>
+            <button class="mucb" onclick="muNext()"><i class="fas fa-step-forward"></i></button>
+          </div>
+        </div>
+        <div class="mulist"><div class="mulhead">QUEUE</div><div id="mupl"></div></div>
+      </div>
+    </div>
+
+    <!-- LINK FINDER -->
+    <div id="v-linkfinder" class="view">
+      <div class="lfsh">
+        <div class="vh"><span class="vt" style="background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">LINK FINDER</span></div>
+        <div class="lfin">
+          <div class="lfc">
+            <div id="lfsel">
+              <div class="lftitle">Link Finder</div>
+              <div class="lfsub">Select your school's blocker and we'll find a link that works for you.</div>
+              <div class="lflabel">WHAT BLOCKER DOES YOUR SCHOOL USE?</div>
+              <div class="lfchips" id="lfchips"></div>
+              <button class="lffind" id="lffind" onclick="lfFind()" disabled>🔍 Find Links</button>
+            </div>
+            <div class="lfres" id="lfres">
+              <div class="lfcnt" id="lfcnt"></div>
+              <div class="lfbadge" id="lfbadge"></div>
+              <button class="lfbig" id="lfbig" onclick="lfOpen()"><i class="fas fa-globe"></i><span>Open Link</span></button>
+              <div class="lfnav">
+                <button class="lfnbtn" id="lfprev" onclick="lfNav(-1)"><i class="fas fa-chevron-left"></i> Back</button>
+                <button class="lfnbtn" id="lfnext" onclick="lfNav(1)">Next <i class="fas fa-chevron-right"></i></button>
+              </div>
+              <button class="lfbkbtn" onclick="lfReset()"><i class="fas fa-arrow-left"></i> Search Again</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="v-settings" class="view">
+      <div class="setwrap">
+        <div class="vh" style="padding:24px 0 14px;margin-bottom:16px;"><span class="vt" style="background:linear-gradient(90deg,var(--amber),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">SETTINGS</span></div>
+        <div class="setsec">
+          <div class="setsec-title">DISGUISE</div>
+          <div class="setrow"><div class="srl"><div class="srl-l">Tab Title</div><div class="srl-s">What shows in the browser tab</div></div><input class="seti" id="s-tab" placeholder="Google Classroom – Period 3"></div>
+          <div class="setrow" style="flex-direction:column;align-items:flex-start;gap:10px;"><div class="srl"><div class="srl-l">Quick Presets</div></div><div class="dismini" id="s-presets"></div></div>
+        </div>
+        <div class="setsec">
+          <div class="setsec-title">PANIC KEY</div>
+          <div class="setrow"><div class="srl"><div class="srl-l">Shortcut</div><div class="srl-s">Instantly opens your disguise</div></div><span style="font-size:11px;color:var(--cyan);font-family:var(--title);letter-spacing:2px;">SHIFT+C</span></div>
+          <div class="setrow"><div class="srl"><div class="srl-l">Redirect URL</div><div class="srl-s">Where Shift+C takes you</div></div><input class="seti" id="s-panic" placeholder="https://classroom.google.com"></div>
+        </div>
+        <button class="setsave" onclick="saveSets()">Save Changes</button>
+        <div class="setsec" style="margin-top:28px;"><div class="setsec-title">ABOUT</div><div class="setabout"><div class="san">INTERGALACTIC</div><div class="sav">Version 2.0 · Space Edition</div><div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6;">Built with HTML, CSS & JavaScript<br>Inspired by Nexora</div></div></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Game Overlay -->
+<div id="goverlay">
+  <div class="gobar">
+    <button class="gox" onclick="closeG()"><i class="fas fa-times"></i></button>
+    <span class="got" id="gtitle">Game</span>
+    <a id="gext" href="#" target="_blank" class="goe">Open in tab ↗</a>
+  </div>
+  <iframe id="gframe" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation"></iframe>
+</div>
+
+<script>
+const CDN='https://cdn.jsdelivr.net/gh/nexora240-lgtm/Nexora-Assets@main/images/';
+const YTE='https://www.youtube-nocookie.com/embed';
+const GAMES=[
+  {n:'Apple Shooter',i:'clappleshooter.webp',u:'https://www.onlinegames.io/apple-shooter/'},
+  {n:'Curveball',i:'clcurveball.webp',u:'https://www.silvergames.com/en/curveball-3d'},
+  {n:'Golf Sunday',i:'clgolfsunday.webp',u:'https://golfsunday.com'},
+  {n:'1 on 1 Tennis',i:'cl1on1tennis.webp',u:'https://www.miniclip.com/games/1-on-1-tennis/en/'},
+  {n:'Evil Glitch',i:'clevilglitch.webp',u:'https://www.silvergames.com/en/evil-glitch'},
+  {n:'Basket Bros',i:'clbasketbros.webp',u:'https://basketbros.io'},
+  {n:'LA Shark',i:'cllosangelesshark.webp',u:'https://www.silvergames.com/en/los-angeles-shark'},
+  {n:'Beam Rider',i:'clbeamrider.webp',u:'https://www.retrogames.cc/arcade-games/beamrider.html'},
+  {n:'Duck Life 3',i:'clducklife3.webp',u:'https://ducklife.app/duck-life-3'},
+  {n:'Dud',i:'cldud.webp',u:'https://dud-game.io'},
+  {n:'Bad Monday',i:'clbadmondaysimulator.webp',u:'https://www.silvergames.com/en/bad-monday-simulator'},
+  {n:'Dank Tomb',i:'cldanktomb.webp',u:'https://danktomb.io'},
+  {n:'Elastic Face',i:'clelasticface.webp',u:'https://www.silvergames.com/en/elastic-face'},
+  {n:'Ice Dodo',i:'clicedodo.webp',u:'https://www.silvergames.com/en/ice-dodo'},
+  {n:'Agar.io',i:'clagariolite.webp',u:'https://agar.io'},
+  {n:'Feed Us 4',i:'clfeedus4.webp',u:'https://www.silvergames.com/en/feed-us-4'},
+  {n:'Impossible Quiz',i:'climpossiblequiz%20(1).webp',u:'https://www.newgrounds.com/portal/view/2891'},
+  {n:'Armor Mayhem 2',i:'clarmormayhem2.webp',u:'https://www.kongregate.com/games/NoahKC/armor-mayhem'},
+  {n:'Level Devil',i:'clleveldevil.webp',u:'https://leveldevil.io'},
+  {n:'Blockpost',i:'clblockpost.webp',u:'https://blockpost.net'},
+  {n:'Gold Digger',i:'clgolddiggerfrvr.webp',u:'https://golddiggerfrvr.com'},
+  {n:'Backrooms',i:'clbackrooms.webp',u:'https://www.silvergames.com/en/the-backrooms-game'},
+  {n:'Coffee Maker',i:'clcoffeemaker.webp',u:'https://www.silvergames.com/en/coffee-maker'},
+  {n:'Barry Secret',i:'clbarryhasasecret.webp',u:'https://www.silvergames.com/en/barry-has-a-secret'},
+];
+const MOVIES=[
+  {t:'Inception',y:2010,e:'🌀'},{t:'Interstellar',y:2014,e:'🚀'},{t:'The Matrix',y:1999,e:'💊'},
+  {t:'Avatar',y:2009,e:'🔵'},{t:'Dune',y:2021,e:'🏜️'},{t:'Oppenheimer',y:2023,e:'☢️'},
+  {t:'The Dark Knight',y:2008,e:'🦇'},{t:'Top Gun',y:2022,e:'✈️'},
+  {t:'John Wick',y:2014,e:'🐶'},{t:'Spider-Man',y:2021,e:'🕷️'},
+  {t:'Barbie',y:2023,e:'👑'},{t:'Avengers',y:2019,e:'⚡'},
+];
+const TRACKS=[
+  {t:'Bliss',a:'Ambient Waves',e:'🌊',d:'3:42'},{t:'Nebula Dreams',a:'Synthwave',e:'🌌',d:'4:08'},
+  {t:'Zero-G',a:'Space Beats',e:'🚀',d:'3:15'},{t:'Pulsar',a:'Lo-Fi Cosmos',e:'⭐',d:'5:22'},
+  {t:'Dark Matter',a:'Orbital',e:'🪐',d:'4:55'},{t:'Event Horizon',a:'Cosmic Drift',e:'🌀',d:'3:30'},
+];
+const DISGUISES=[
+  {l:'Google Classroom',t:'Google Classroom – Period 3',u:'https://classroom.google.com'},
+  {l:'Clever',t:'Clever – Student Portal',u:'https://clever.com/in/school'},
+  {l:'Canvas',t:'Canvas – Dashboard',u:'https://canvas.instructure.com'},
+  {l:'Google Drive',t:'Google Drive – My Drive',u:'https://drive.google.com'},
+  {l:'Seesaw',t:'Seesaw – Class Activities',u:'https://app.seesaw.me'},
+  {l:'Edpuzzle',t:'Edpuzzle – My Classes',u:'https://edpuzzle.com'},
+];
+const BLOCKERS={goguardian:'GoGuardian',fortiguard:'FortiGuard',blocksi:'Blocksi Web',blocksiAI:'Blocksi AI',lightspeed:'Lightspeed',securly:'Securly',ciscoumbrella:'Cisco Umbrella',contentkeeper:'ContentKeeper',aristotlek12:'AristotleK12',sensocloud:'Senso Cloud',deledao:'Deledao',iboss:'iBoss',sophos:'Sophos',barracuda:'Barracuda',qustodio:'Qustodio',dnsfilter:'DNS Filter',lanschool:'LanSchool',paloalto:'Palo Alto'};
+const LLINKS={goguardian:['https://childsupport.b-cdn.net','https://interstellar.b-cdn.net','https://cobalt-proxy.netlify.app','https://shuttleproxy.netlify.app'],fortiguard:['https://ludicrous-proxy.vercel.app','https://nebula-proxy.vercel.app','https://holy-unblocker.netlify.app'],blocksi:['https://titaniumnetwork.org','https://ultraviolet.netlify.app','https://holy-unblocker.netlify.app'],blocksiAI:['https://titaniumnetwork.org','https://interstellar-proxy.netlify.app'],lightspeed:['https://cobalt-proxy.netlify.app','https://luminous-prism.netlify.app'],securly:['https://holy-unblocker.netlify.app','https://nebula.udp.sh','https://interstellar.b-cdn.net'],ciscoumbrella:['https://ludicrous-proxy.vercel.app','https://terbium-proxy.vercel.app'],contentkeeper:['https://ultraviolet.netlify.app','https://cobalt-proxy.netlify.app'],aristotlek12:['https://nebula.udp.sh','https://holy-unblocker.netlify.app'],sensocloud:['https://interstellar.b-cdn.net','https://shuttleproxy.netlify.app'],deledao:['https://titaniumnetwork.org','https://ludicrous-proxy.vercel.app'],iboss:['https://nebula-proxy.vercel.app','https://holy-unblocker.netlify.app'],sophos:['https://cobalt-proxy.netlify.app','https://incognito.netlify.app'],barracuda:['https://ludicrous-proxy.vercel.app','https://terbium-proxy.vercel.app'],qustodio:['https://nebula.udp.sh','https://interstellar.b-cdn.net'],dnsfilter:['https://titaniumnetwork.org','https://ultraviolet.netlify.app'],lanschool:['https://cobalt-proxy.netlify.app','https://luminous-prism.netlify.app'],paloalto:['https://terbium-proxy.vercel.app','https://nebula-proxy.vercel.app']};
+
+let cfg={hide:'yes',save:'yes',disguise:DISGUISES[0],panicUrl:'https://classroom.google.com'};
+let step=1,playing=false,tIdx=0,pVal=0,pInt=null,lfBl=null,lfLinks=[],lfIdx=0;
+
+// STARS
+(()=>{const c=document.getElementById('stars-bg');for(let i=0;i<150;i++){const s=document.createElement('div');s.className='star';const z=Math.random()*1.8+.4;s.style.cssText=`width:${z}px;height:${z}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:-${Math.random()*5}s;`;c.appendChild(s);}})();
+
+// SETUP DOTS
+function mkDots(){const c=document.getElementById('sdots');c.innerHTML='';for(let i=1;i<=6;i++){const d=document.createElement('div');d.className='pd'+(i===step?' on':'');c.appendChild(d);}}
+mkDots();
+
+function nxt(){document.getElementById('step-'+step).classList.remove('active');step++;document.getElementById('step-'+step).classList.add('active');mkDots();}
+function so(g,v){cfg[g]=v;['yes','no'].forEach(x=>{const e=document.getElementById(g+'-'+x);if(e)e.classList.toggle('sel',x===v);});}
+function sd(el,t,u){document.querySelectorAll('.dis-card').forEach(d=>d.classList.remove('sel'));el.classList.add('sel');cfg.disguise={t,u};cfg.panicUrl=u;}
+function finish(){nxt();}
+function launch(){
+  document.getElementById('page-title').textContent=cfg.disguise.t||'Google Classroom – Period 3';
+  if(cfg.save==='yes'){try{localStorage.setItem('ig2_done','1');localStorage.setItem('ig2_title',cfg.disguise.t);localStorage.setItem('ig2_panic',cfg.panicUrl);}catch(e){}}
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('app').classList.add('show');
+  init();
+}
+
+function init(){buildHome();buildGames();buildMovies();buildMusic();buildLF();buildSettings();sv('home');}
+
+// NAVIGATION
+function sv(id){
+  // Clear BOTH the class AND any inline style from every view
+  document.querySelectorAll('.view').forEach(v=>{
+    v.classList.remove('on');
+    v.style.display=''; // wipes the inline style so CSS display:none takes over
+  });
+  document.querySelectorAll('.sbl').forEach(l=>l.classList.remove('on'));
+  const v=document.getElementById('v-'+id);
+  if(v){
+    v.classList.add('on');
+    v.style.display = id==='home' ? 'flex' : 'block'; // explicitly show the active view
+  }
+  const l=document.querySelector(`[data-v="${id}"]`);if(l)l.classList.add('on');
+}
+
+// HOME COLUMNS
+const HGAMES=[['clappleshooter.webp','Apple Shooter'],['clcurveball.webp','Curveball'],['clgolfsunday.webp','Golf Sunday'],['cl1on1tennis.webp','1on1 Tennis'],['clevilglitch.webp','Evil Glitch'],['clbasketbros.webp','Basket Bros'],['cllosangelesshark.webp','LA Shark'],['clbeamrider.webp','Beam Rider'],['clducklife3.webp','Duck Life 3'],['cldud.webp','Dud'],['clbadmondaysimulator.webp','Bad Monday'],['cldanktomb.webp','Dank Tomb'],['clelasticface.webp','Elastic Face'],['clicedodo.webp','Ice Dodo'],['clagariolite.webp','Agar.io'],['clfeedus4.webp','Feed Us 4'],['clarmormayhem2.webp','Armor Mayhem'],['clleveldevil.webp','Level Devil'],['clblockpost.webp','Blockpost'],['clgolddiggerfrvr.webp','Gold Digger'],['clbackrooms.webp','Backrooms'],['clcoffeemaker.webp','Coffee Maker'],['clbarryhasasecret.webp','Barry Secret']];
+function buildHome(){
+  const c=document.getElementById('hcols');if(!c)return;c.innerHTML='';
+  [0,1,2].forEach(ci=>{
+    const col=document.createElement('div');col.className='hcol';
+    const track=document.createElement('div');track.className='htrack';
+    const start=(ci*7)%HGAMES.length;
+    const items=[...HGAMES.slice(start,start+8),...HGAMES.slice(start,start+8)];
+    items.forEach(([img,name])=>{
+      const a=document.createElement('a');a.className='hcard';a.href='#';
+      a.onclick=e=>{e.preventDefault();sv('games');};
+      a.innerHTML=`<img src="${CDN}${img}" alt="${name}" loading="lazy"><div class="hcov"><span>${name}</span></div>`;
+      track.appendChild(a);
+    });
+    col.appendChild(track);c.appendChild(col);
+  });
+}
+
+// GAMES
+function buildGames(){
+  const g=document.getElementById('ggrid'),cnt=document.getElementById('gcnt');
+  if(!g)return;if(cnt)cnt.textContent=GAMES.length+' games';
+  g.innerHTML=GAMES.map((gm,i)=>`<div class="gcard" onclick="openG(${i})"><img src="${CDN}${gm.i}" alt="${gm.n}" loading="lazy"><div class="gci"><div class="gcn">${gm.n}</div></div></div>`).join('');
+}
+function openG(i){const g=GAMES[i];document.getElementById('gtitle').textContent=g.n;document.getElementById('gext').href=g.u;document.getElementById('gframe').src=g.u;document.getElementById('goverlay').classList.add('show');}
+function closeG(){document.getElementById('goverlay').classList.remove('show');document.getElementById('gframe').src='';}
+
+// BROWSER - full tab + smart routing
+let brCurrentUrl = '';
+let brBlockedUrl = '';
+let brTabCount = 1;
+
+function brShowWelcome(){
+  document.getElementById('br-welcome').style.display='flex';
+  document.getElementById('brframe').classList.remove('active');
+  document.getElementById('br-blocked').classList.remove('show');
+  document.getElementById('brurl').value='';
+}
+function brHideWelcome(){
+  document.getElementById('br-welcome').style.display='none';
+}
+
+function brGo(){
+  let u = document.getElementById('brurl').value.trim();
+  if(!u) return;
+  brNavigate(u);
+}
+
+function brSearchFromHome(){
+  const v = document.getElementById('br-wsearch-input').value.trim();
+  if(!v) return;
+  brNavigate(v);
+}
+
+function brNavigate(u){
+  if(!u.startsWith('http')) u = u.includes('.') ? 'https://'+u : 'https://duckduckgo.com/lite/?q='+encodeURIComponent(u);
+  brCurrentUrl = u;
+  brBlockedUrl = u;
+  document.getElementById('brurl').value = u;
+  brHideWelcome();
+  document.getElementById('br-blocked').classList.remove('show');
+  const frame = document.getElementById('brframe');
+  frame.classList.add('active');
+
+  // Try Scramjet proxy first (only works when hosted on Node.js server)
+  const proxied = sjEncode(u);
+  if(proxied) {
+    frame.src = proxied;
+    frame.onload = ()=>{
+      try{ const t=frame.contentDocument&&frame.contentDocument.title; if(t)document.getElementById('br-tabtitle-1').textContent=t.slice(0,28); }catch(e){}
+    };
+    return;
+  }
+
+  // Fallback: direct iframe (works for sites that allow embedding)
+  // YouTube → Invidious embed
+  let src = u;
+  if(u.match(/youtube\.com|youtu\.be/)){
+    const m=u.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    src = m ? 'https://www.youtube-nocookie.com/embed/'+m[1]+'?autoplay=1' : 'https://yewtu.be/'+u.split('youtube.com').pop();
+  }
+  frame.src = src;
+  let blockTimer = setTimeout(()=>{
+    try{ const d=frame.contentDocument; if(!d||d.title==='') showBrBlocked(u); }catch(e){ showBrBlocked(u); }
+  }, 3500);
+  frame.onload = ()=>{
+    clearTimeout(blockTimer);
+    try{ const t=frame.contentDocument&&frame.contentDocument.title; if(t)document.getElementById('br-tabtitle-1').textContent=t.slice(0,28); }catch(e){}
+  };
+}
+
+function showBrBlocked(u){
+  document.getElementById('brframe').classList.remove('active');
+  const bl = document.getElementById('br-blocked');
+  bl.classList.add('show');
+  document.getElementById('br-blocked-url-text').textContent = '"' + u.slice(0,60) + (u.length>60?'…':'') + '" blocked iframes. Open in a real tab instead.';
+  brBlockedUrl = u;
+}
+
+function brOpenBlocked(){ if(brBlockedUrl) window.open(brBlockedUrl,'_blank'); }
+function brBack(){ try{ document.getElementById('brframe').contentWindow.history.back(); }catch(e){} }
+function brFwd(){ try{ document.getElementById('brframe').contentWindow.history.forward(); }catch(e){} }
+function brRefresh(){ const f=document.getElementById('brframe'); if(f.src) f.src=f.src; }
+function brHome(){ brShowWelcome(); }
+function brTab(){ let u=document.getElementById('brurl').value.trim(); if(!u.startsWith('http'))u='https://'+u; window.open(u,'_blank'); }
+function brOpenUrl(u){ brNavigate(u); }
+function brNewTab(){ brShowWelcome(); }
+function brCloseTab(n){ brShowWelcome(); }
+
+// YOUTUBE - nocookie embeds + Invidious search
+
+function ytSrch(){
+  const q=document.getElementById('ytq').value.trim();if(!q)return;
+  // Open Invidious search in new tab (most reliable)
+  window.open('https://yewtu.be/search?q='+encodeURIComponent(q),'_blank');
+}
+function ytHome(){
+  document.getElementById('ytframe').style.display='none';
+  document.getElementById('ytframe').src='';
+  document.getElementById('ythome').style.display='flex';
+}
+function ytLoad(){
+  const v=document.getElementById('ytid').value.trim();
+  let id=v;const m=v.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+  if(m)id=m[1];
+  if(/^[A-Za-z0-9_-]{11}$/.test(id))ytId(id);
+  else window.open('https://yewtu.be/search?q='+encodeURIComponent(v),'_blank');
+}
+function ytId(id){
+  // youtube-nocookie.com embeds actually work for most videos
+  const frame=document.getElementById('ytframe');
+  frame.src=`${YTE}/${id}?autoplay=1&rel=0&modestbranding=1`;
+  frame.style.display='block';
+  document.getElementById('ythome').style.display='none';
+}
+
+// MOVIES
+function buildMovies(){const g=document.getElementById('mvgrid');if(!g)return;g.innerHTML=MOVIES.map((m,i)=>`<div class="mvcard" onclick="mvPlay(${i})"><div class="mvposter">${m.e}</div><div class="mvi"><div class="mvn">${m.t}</div><div class="mvy">${m.y}</div></div></div>`).join('');}
+function mvPlay(i){document.getElementById('mvgrid').style.display='none';const p=document.getElementById('mvplayer');p.style.display='flex';document.getElementById('mvframe').src=`https://www.cineby.app/movie?title=${encodeURIComponent(MOVIES[i].t)}`;}
+function mvBk(){document.getElementById('mvgrid').style.display='grid';document.getElementById('mvplayer').style.display='none';document.getElementById('mvframe').src='';}
+function brOpen(u){sv('browser');setTimeout(()=>{brNavigate(u);},150);}
+
+// MUSIC
+function buildMusic(){const pl=document.getElementById('mupl');if(!pl)return;pl.innerHTML=TRACKS.map((t,i)=>`<div class="mulitem${i===0?' on':''}" id="muli-${i}" onclick="muTrk(${i})"><span class="muln" id="mun-${i}">${i===0?'▶':i+1}</span><span class="mulic">${t.e}</span><div class="mulinf"><div class="mult">${t.t}</div><div class="mula">${t.a}</div></div><span class="muld">${t.d}</span></div>`).join('');}
+function muToggle(){playing=!playing;const b=document.getElementById('muplaybtn'),a=document.getElementById('muart');b.innerHTML=playing?'<i class="fas fa-pause"></i>':'<i class="fas fa-play"></i>';if(a){playing?a.classList.add('spin'):a.classList.remove('spin');}if(playing)muProg();else clearInterval(pInt);}
+function muProg(){clearInterval(pInt);const p=TRACKS[tIdx].d.split(':'),tot=+p[0]*60+ +p[1];pInt=setInterval(()=>{if(!playing)return;pVal=Math.min(pVal+1,tot);const f=document.getElementById('mufill'),el=document.getElementById('muel');if(f)f.style.width=(pVal/tot*100)+'%';if(el)el.textContent=Math.floor(pVal/60)+':'+(pVal%60).toString().padStart(2,'0');if(pVal>=tot)muNext();},1000);}
+function muTrk(i){clearInterval(pInt);pVal=0;tIdx=i;const t=TRACKS[i];const a=document.getElementById('muart');document.getElementById('muname').textContent=t.t;document.getElementById('muart2').textContent=t.a;document.getElementById('mudur').textContent=t.d;document.getElementById('muel').textContent='0:00';document.getElementById('mufill').style.width='0%';if(a)a.textContent=t.e;document.querySelectorAll('.mulitem').forEach((el,idx)=>{el.classList.toggle('on',idx===i);const n=document.getElementById('mun-'+idx);if(n)n.textContent=idx===i?'▶':idx+1;});if(playing)muProg();}
+function muNext(){muTrk((tIdx+1)%TRACKS.length);}function muPrev(){muTrk((tIdx-1+TRACKS.length)%TRACKS.length);}
+function muScrub(e){const r=e.currentTarget.getBoundingClientRect(),pct=(e.clientX-r.left)/r.width,p=TRACKS[tIdx].d.split(':'),tot=+p[0]*60+ +p[1];pVal=Math.floor(pct*tot);}
+
+// LINK FINDER
+function buildLF(){const c=document.getElementById('lfchips');if(!c)return;c.innerHTML=Object.keys(BLOCKERS).map(k=>`<div class="lfchip" id="lfc-${k}" onclick="lfSel('${k}')">${BLOCKERS[k]}</div>`).join('');}
+function lfSel(k){lfBl=k;document.querySelectorAll('.lfchip').forEach(c=>c.classList.remove('on'));const e=document.getElementById('lfc-'+k);if(e)e.classList.add('on');const b=document.getElementById('lffind');if(b)b.disabled=false;}
+function lfFind(){if(!lfBl)return;lfLinks=LLINKS[lfBl]||[];lfIdx=0;document.getElementById('lfsel').style.display='none';document.getElementById('lfres').classList.add('show');lfShow();}
+function lfShow(){const url=lfLinks[lfIdx]||'#';document.getElementById('lfcnt').textContent=`Link ${lfIdx+1} of ${lfLinks.length}`;document.getElementById('lfbadge').textContent=BLOCKERS[lfBl];document.getElementById('lfbig').dataset.url=url;document.getElementById('lfprev').disabled=lfIdx===0;document.getElementById('lfnext').disabled=lfIdx>=lfLinks.length-1;}
+function lfNav(d){lfIdx=Math.max(0,Math.min(lfLinks.length-1,lfIdx+d));lfShow();}
+function lfOpen(){const u=document.getElementById('lfbig').dataset.url;if(u&&u!=='#')window.open(u,'_blank');}
+function lfReset(){document.getElementById('lfsel').style.display='block';document.getElementById('lfres').classList.remove('show');lfBl=null;document.querySelectorAll('.lfchip').forEach(c=>c.classList.remove('on'));const b=document.getElementById('lffind');if(b)b.disabled=true;}
+
+// SETTINGS
+function buildSettings(){const ti=document.getElementById('s-tab'),pi=document.getElementById('s-panic');if(ti)ti.value=document.getElementById('page-title').textContent;if(pi)pi.value=cfg.panicUrl;const pg=document.getElementById('s-presets');if(!pg)return;pg.innerHTML=DISGUISES.map(d=>`<div class="dm${cfg.disguise.t===d.t?' on':''}" onclick="apPre('${d.t}','${d.u}',this)">${d.l}</div>`).join('');}
+function apPre(t,u,el){document.querySelectorAll('.dm').forEach(d=>d.classList.remove('on'));if(el)el.classList.add('on');document.getElementById('s-tab').value=t;document.getElementById('s-panic').value=u;}
+function saveSets(){const t=document.getElementById('s-tab').value.trim(),p=document.getElementById('s-panic').value.trim();if(t){document.getElementById('page-title').textContent=t;cfg.disguise.t=t;}if(p)cfg.panicUrl=p;try{localStorage.setItem('ig2_title',t);localStorage.setItem('ig2_panic',p);}catch(e){}}
+
+// TYPED ANIMATION
+const WORDS=['unblocked.','everything.','infinite.','yours.','cosmic.','free.','fast.'];
+let wi=0,ci=0,del=false;
+function typeIt(){const el=document.getElementById('tword');if(!el)return;const w=WORDS[wi];if(!del){el.textContent=w.substring(0,ci+1);ci++;if(ci>=w.length){del=true;setTimeout(typeIt,1800);return;}}else{el.textContent=w.substring(0,ci-1);ci--;if(ci<=0){del=false;wi=(wi+1)%WORDS.length;}}setTimeout(typeIt,del?55:95);}
+setTimeout(typeIt,1000);
+
+// PANIC KEY
+document.addEventListener('keydown',e=>{if(e.shiftKey&&e.key==='C')window.open(cfg.panicUrl||'https://classroom.google.com','_blank');});
+
+// AUTO-LAUNCH IF SAVED — must be last so all consts and functions exist
+(()=>{try{if(localStorage.getItem('ig2_done')){const t=localStorage.getItem('ig2_title')||'Google Classroom – Period 3';const p=localStorage.getItem('ig2_panic')||'https://classroom.google.com';document.getElementById('page-title').textContent=t;cfg.disguise={t};cfg.panicUrl=p;document.getElementById('setup').classList.add('hidden');document.getElementById('app').classList.add('show');init();}}catch(e){console.warn('Auto-launch error:',e);}})();
+</script>
+</body>
+</html>
