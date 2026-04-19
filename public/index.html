@@ -831,7 +831,7 @@ function brNewTab(){
   const tabEl = document.createElement('div');
   tabEl.className = 'br-tab';
   tabEl.id = 'br-tab-' + id;
-  tabEl.innerHTML = \`<img src="about:blank" alt="" style="display:none"><span id="br-tabtitle-\${id}">New Tab</span><button class="br-tab-close" onclick="brCloseTab(\${id})">×</button>\`;
+  tabEl.innerHTML = '<img src="about:blank" alt="" style="display:none"><span id="br-tabtitle-' + id + '">New Tab</span><button class="br-tab-close" onclick="brCloseTab(' + id + ')">\u00d7</button>';
   tabEl.onclick = (e) => { if(!e.target.classList.contains('br-tab-close')) brSetActiveTab(id); };
   tabBar.insertBefore(tabEl, newBtn);
   brSetActiveTab(id);
