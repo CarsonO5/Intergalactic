@@ -155,7 +155,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13
 .br-sc:hover img{transform:scale(1.15) rotate(5deg);}
 .br-sc span{font-size:12px;font-weight:500;}
 .br-frame{position:absolute;inset:0;width:100%;height:100%;border:none;display:none;}
-.br-frame.active{display:block;}
+.br-frame{position:absolute;inset:0;width:100%;height:100%;border:none;display:none;}
+#br-frames{position:absolute;inset:0;}
 .br-blocked{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--bg);padding:40px;text-align:center;}
 .br-blocked.show{display:flex;}
 .br-blocked-icon{font-size:48px;opacity:.5;}
@@ -358,7 +359,6 @@ function proxyUrl(url) {
     </nav>
     <div class="sb-bot">
       <a class="sbl" onclick="sv('linkfinder')" data-v="linkfinder"><i class="fas fa-search"></i><span>Link Finder</span></a>
-      <a class="sbl" href="https://discord.com/invite/wSBXKbGepr" target="_blank"><i class="fab fa-discord"></i><span>Discord</span></a>
       <a class="sbl" onclick="sv('settings')" data-v="settings"><i class="fas fa-cog"></i><span>Settings</span></a>
     </div>
   </aside>
@@ -391,7 +391,8 @@ function proxyUrl(url) {
         <div style="font-size:72px;line-height:1;">🚧</div>
         <div style="font-family:var(--title);font-size:16px;font-weight:700;letter-spacing:4px;background:linear-gradient(90deg,var(--amber),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">UNDER CONSTRUCTION</div>
         <div style="font-size:13px;color:var(--muted);max-width:320px;line-height:1.7;">Games are being built out. Check back soon — this section is going to be massive.</div>
-        <div style="display:flex;gap:8px;margin-top:8px;">
+        <img src="https://i.ytimg.com/vi/0gbHvYi6gPM/sddefault.jpg" alt="" style="width:320px;max-width:90%;border-radius:14px;margin-top:8px;opacity:.85;border:1px solid rgba(255,255,255,.1);">
+        <div style="display:flex;gap:8px;margin-top:4px;">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.2s ease-in-out infinite;"></div>
           <div style="width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.2s ease-in-out infinite .2s;"></div>
           <div style="width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.2s ease-in-out infinite .4s;"></div>
@@ -425,7 +426,7 @@ function proxyUrl(url) {
           <button class="br-nav-btn" onclick="brTab()" title="Open in new tab" style="margin-left:4px;font-size:13px;">↗</button>
         </div>
         <!-- Content -->
-        <div class="br-content">
+        <div class="br-content" style="position:relative;">
           <!-- Welcome screen -->
           <div class="br-welcome" id="br-welcome">
             <h1>INTERGALACTIC Browser</h1>
@@ -443,10 +444,7 @@ function proxyUrl(url) {
                 <img src="https://cdn.jsdelivr.net/gh/nexora240-lgtm/Nexora-Assets@main/proxy/tiktok.png" alt="TikTok">
                 <span>TikTok</span>
               </button>
-              <button class="br-sc" onclick="brOpenUrl('https://discord.com/app')">
-                <img src="https://cdn.jsdelivr.net/gh/nexora240-lgtm/Nexora-Assets@main/proxy/discord.png" alt="Discord">
-                <span>Discord</span>
-              </button>
+
               <button class="br-sc" onclick="brOpenUrl('https://chatgpt.com')">
                 <img src="https://cdn.jsdelivr.net/gh/nexora240-lgtm/Nexora-Assets@main/proxy/openai.png" alt="ChatGPT">
                 <span>ChatGPT</span>
@@ -457,14 +455,14 @@ function proxyUrl(url) {
               </button>
             </div>
           </div>
-          <!-- Proxy iframe -->
-          <iframe id="brframe" class="br-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation allow-modals"></iframe>
+          <!-- Per-tab iframes rendered here dynamically -->
+          <div id="br-frames" style="position:absolute;inset:0;"></div>
           <!-- Blocked fallback -->
           <div class="br-blocked" id="br-blocked">
             <div class="br-blocked-icon">🚫</div>
             <h3>Site blocked iframes</h3>
             <p id="br-blocked-url-text">This site doesn't allow embedding. Open it in a real browser tab instead.</p>
-            <button class="br-open-btn" id="br-open-real" onclick="brOpenBlocked()">Open in New Tab ↗</button>
+            <button class="br-open-btn" onclick="brOpenBlocked()">Open in New Tab ↗</button>
           </div>
         </div>
       </div>
@@ -671,7 +669,15 @@ function launch(){
   init();
 }
 
-function init(){buildHome();buildGames();buildMovies();buildMusic();buildLF();buildSettings();sv('home');}
+function init(){
+  // Set up tab 1 with its iframe
+  brTabs[1]={title:'New Tab',url:''};
+  brCreateFrame(1);
+  // Wire up existing tab 1 button click
+  const t1=document.getElementById('br-tab-1');
+  if(t1) t1.onclick=()=>brSetActiveTab(1);
+  buildHome();buildGames();buildMovies();buildMusic();buildLF();buildSettings();sv('home');
+}
 
 // NAVIGATION
 function sv(id){
@@ -717,149 +723,163 @@ function buildGames(){
 function openG(i){const g=GAMES[i];document.getElementById('gtitle').textContent=g.n;document.getElementById('gext').href=g.u;document.getElementById('gframe').src=g.u;document.getElementById('goverlay').classList.add('show');}
 function closeG(){document.getElementById('goverlay').classList.remove('show');document.getElementById('gframe').src='';}
 
-// BROWSER - full tab + smart routing
-let brCurrentUrl = '';
-let brBlockedUrl = '';
-let brTabCount = 1;
+// BROWSER - per-tab iframe system
+const BR_PROXY = (u) => '/fetch?url=' + encodeURIComponent(u);
+let brTabs = {};
 let brActiveTab = 1;
-let brTabs = { 1: { title: 'New Tab', url: '' } };
+let brTabCount = 1;
+let brBlockedUrl = '';
 
-function brShowWelcome(){
-  document.getElementById('br-welcome').style.display='flex';
-  document.getElementById('brframe').classList.remove('active');
+function brInit() {
+  brTabs[1] = { url: '', title: 'New Tab' };
+  brCreateFrame(1);
+  brShowWelcome(1);
+}
+
+function brCreateFrame(id) {
+  const container = document.getElementById('br-frames');
+  if(!container) return null;
+  const f = document.createElement('iframe');
+  f.id = 'brf-' + id;
+  f.className = 'br-frame';
+  f.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation allow-modals');
+  f.style.cssText = 'display:none;position:absolute;inset:0;width:100%;height:100%;border:none;';
+  container.appendChild(f);
+  return f;
+}
+
+function brGetFrame(id) { return document.getElementById('brf-' + id); }
+
+function brHideAllFrames() {
+  document.querySelectorAll('.br-frame').forEach(f => f.style.display = 'none');
+}
+
+function brShowWelcome(id) {
+  brHideAllFrames();
+  const w = document.getElementById('br-welcome');
+  if(w) w.style.display = 'flex';
   document.getElementById('br-blocked').classList.remove('show');
-  document.getElementById('brurl').value='';
-  brTabs[brActiveTab].url = '';
-  brUpdateTabTitle(brActiveTab, 'New Tab');
+  document.getElementById('brurl').value = '';
+  if(brTabs[id]) brTabs[id].url = '';
+  brUpdateTabTitle(id, 'New Tab');
 }
-function brHideWelcome(){
-  document.getElementById('br-welcome').style.display='none';
+
+function brHideWelcome() {
+  const w = document.getElementById('br-welcome');
+  if(w) w.style.display = 'none';
 }
-function brUpdateTabTitle(id, title){
+
+function brUpdateTabTitle(id, title) {
   const el = document.getElementById('br-tabtitle-' + id);
   if(el) el.textContent = title.slice(0, 22);
   if(brTabs[id]) brTabs[id].title = title;
 }
-function brSetActiveTab(id){
+
+function brSetActiveTab(id) {
   brActiveTab = id;
   document.querySelectorAll('.br-tab').forEach(t => t.classList.remove('active'));
   const tab = document.getElementById('br-tab-' + id);
   if(tab) tab.classList.add('active');
-  // Restore URL bar for this tab
-  document.getElementById('brurl').value = brTabs[id]?.url || '';
-  // Show welcome if no URL
-  if(!brTabs[id]?.url) brShowWelcome(); else brHideWelcome();
-}
-
-function brGo(){
-  let u = document.getElementById('brurl').value.trim();
-  if(!u) return;
-  brNavigate(u);
-}
-
-function brSearchFromHome(){
-  const v = document.getElementById('br-wsearch-input').value.trim();
-  if(!v) return;
-  brNavigate(v);
-}
-
-function brNavigate(u){
-  if(!u.startsWith('http')) u = u.includes('.') ? 'https://'+u : 'https://duckduckgo.com/lite/?q='+encodeURIComponent(u);
-  brCurrentUrl = u;
-  brBlockedUrl = u;
-  if(brTabs[brActiveTab]) brTabs[brActiveTab].url = u;
-  document.getElementById('brurl').value = u;
-  // Update favicon from URL
-  const favEl = document.querySelector('#br-tab-' + brActiveTab + ' img');
-  if(favEl){ favEl.src = 'https://www.google.com/s2/favicons?domain=' + new URL(u).hostname + '&sz=32'; favEl.style.display=''; }
-  brHideWelcome();
-  document.getElementById('br-blocked').classList.remove('show');
-  const frame = document.getElementById('brframe');
-  frame.classList.add('active');
-
-  // Try server-side proxy first (Railway deployment)
-  const proxied = proxyUrl(u);
-  if(proxied) {
-    frame.src = proxied;
-    brUpdateTabTitle(brActiveTab, new URL(u).hostname);
-    frame.onload = ()=>{
-      try{ const t=frame.contentDocument&&frame.contentDocument.title; if(t) brUpdateTabTitle(brActiveTab, t); }catch(e){}
-    };
-    return;
+  const url = brTabs[id] ? brTabs[id].url : '';
+  document.getElementById('brurl').value = url;
+  if(!url) {
+    brShowWelcome(id);
+  } else {
+    brHideWelcome();
+    document.getElementById('br-blocked').classList.remove('show');
+    brHideAllFrames();
+    const f = brGetFrame(id);
+    if(f) f.style.display = 'block';
   }
-
-  // Fallback: direct iframe
-  let src = u;
-  if(u.match(/youtube\.com|youtu\.be/)){
-    const m=u.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-    src = m ? 'https://www.youtube-nocookie.com/embed/'+m[1]+'?autoplay=1' : 'https://yewtu.be/'+u.split('youtube.com').pop();
-  }
-  frame.src = src;
-  brUpdateTabTitle(brActiveTab, new URL(u).hostname);
-  let blockTimer = setTimeout(()=>{
-    try{ const d=frame.contentDocument; if(!d||d.title==='') showBrBlocked(u); }catch(e){ showBrBlocked(u); }
-  }, 3500);
-  frame.onload = ()=>{
-    clearTimeout(blockTimer);
-    try{ const t=frame.contentDocument&&frame.contentDocument.title; if(t) brUpdateTabTitle(brActiveTab, t); }catch(e){}
-  };
 }
 
-function showBrBlocked(u){
-  document.getElementById('brframe').classList.remove('active');
-  const bl = document.getElementById('br-blocked');
-  bl.classList.add('show');
-  document.getElementById('br-blocked-url-text').textContent = '"' + u.slice(0,60) + (u.length>60?'…':'') + '" blocked iframes. Open in a real tab instead.';
-  brBlockedUrl = u;
-}
-
-function brOpenBlocked(){ if(brBlockedUrl) window.open(brBlockedUrl,'_blank'); }
-function brBack(){ try{ document.getElementById('brframe').contentWindow.history.back(); }catch(e){} }
-function brFwd(){ try{ document.getElementById('brframe').contentWindow.history.forward(); }catch(e){} }
-function brRefresh(){ const f=document.getElementById('brframe'); if(f.src) f.src=f.src; }
-function brHome(){ brShowWelcome(); }
-function brTab(){ let u=document.getElementById('brurl').value.trim(); if(!u.startsWith('http'))u='https://'+u; window.open(u,'_blank'); }
-function brOpenUrl(u){ brNavigate(u); }
-
-function brNewTab(){
+function brNewTab() {
   brTabCount++;
   const id = brTabCount;
-  brTabs[id] = { title: 'New Tab', url: '' };
-  // Add tab element to tab bar
+  brTabs[id] = { url: '', title: 'New Tab' };
+  brCreateFrame(id);
   const tabBar = document.getElementById('br-tabbar');
   const newBtn = tabBar.querySelector('.br-new-tab');
   const tabEl = document.createElement('div');
   tabEl.className = 'br-tab';
   tabEl.id = 'br-tab-' + id;
-  tabEl.innerHTML = '<img src="about:blank" alt="" style="display:none"><span id="br-tabtitle-' + id + '">New Tab</span><button class="br-tab-close" onclick="brCloseTab(' + id + ')">\u00d7</button>';
   tabEl.onclick = (e) => { if(!e.target.classList.contains('br-tab-close')) brSetActiveTab(id); };
+  const titleSpan = document.createElement('span');
+  titleSpan.id = 'br-tabtitle-' + id;
+  titleSpan.textContent = 'New Tab';
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'br-tab-close';
+  closeBtn.textContent = '×';
+  closeBtn.onclick = (e) => { e.stopPropagation(); brCloseTab(id); };
+  tabEl.appendChild(titleSpan);
+  tabEl.appendChild(closeBtn);
   tabBar.insertBefore(tabEl, newBtn);
   brSetActiveTab(id);
 }
 
-function brCloseTab(id){
+function brCloseTab(id) {
   const tabEl = document.getElementById('br-tab-' + id);
   if(tabEl) tabEl.remove();
+  const frame = brGetFrame(id);
+  if(frame) frame.remove();
   delete brTabs[id];
-  // Switch to another tab or show welcome
-  const remaining = Object.keys(brTabs);
-  if(remaining.length > 0){
-    brSetActiveTab(parseInt(remaining[remaining.length-1]));
+  const remaining = Object.keys(brTabs).map(Number);
+  if(remaining.length > 0) {
+    brSetActiveTab(remaining[remaining.length - 1]);
   } else {
-    brTabCount = 1;
-    brTabs[1] = { title: 'New Tab', url: '' };
-    // Re-add tab 1
-    const tabBar = document.getElementById('br-tabbar');
-    const newBtn = tabBar.querySelector('.br-new-tab');
-    const tabEl = document.createElement('div');
-    tabEl.className = 'br-tab active';
-    tabEl.id = 'br-tab-1';
-    tabEl.innerHTML = '<img src="about:blank" alt="" style="display:none"><span id="br-tabtitle-1">New Tab</span><button class="br-tab-close" onclick="brCloseTab(1)">×</button>';
-    tabBar.insertBefore(tabEl, newBtn);
-    brActiveTab = 1;
-    brShowWelcome();
+    brNewTab();
   }
 }
+
+function brGo() {
+  const u = document.getElementById('brurl').value.trim();
+  if(u) brNavigate(u);
+}
+
+function brSearchFromHome() {
+  const v = document.getElementById('br-wsearch-input').value.trim();
+  if(v) brNavigate(v);
+}
+
+function brNavigate(u) {
+  if(!u.startsWith('http')) {
+    u = u.includes('.') ? 'https://' + u : 'https://duckduckgo.com/lite/?q=' + encodeURIComponent(u);
+  }
+  if(brTabs[brActiveTab]) brTabs[brActiveTab].url = u;
+  document.getElementById('brurl').value = u;
+  brHideWelcome();
+  document.getElementById('br-blocked').classList.remove('show');
+  try {
+    const host = new URL(u).hostname;
+    brUpdateTabTitle(brActiveTab, host);
+  } catch(e) {}
+  const proxied = BR_PROXY(u);
+  brHideAllFrames();
+  let frame = brGetFrame(brActiveTab);
+  if(!frame) frame = brCreateFrame(brActiveTab);
+  frame.style.display = 'block';
+  frame.src = proxied;
+  frame.onload = () => {
+    try {
+      const t = frame.contentDocument && frame.contentDocument.title;
+      if(t && t.trim()) brUpdateTabTitle(brActiveTab, t);
+    } catch(e) {}
+  };
+}
+
+function showBrBlocked(u) {
+  brHideAllFrames();
+  document.getElementById('br-blocked').classList.add('show');
+  brBlockedUrl = u;
+}
+
+function brOpenBlocked() { if(brBlockedUrl) window.open(brBlockedUrl, '_blank'); }
+function brBack() { try { brGetFrame(brActiveTab).contentWindow.history.back(); } catch(e) {} }
+function brFwd() { try { brGetFrame(brActiveTab).contentWindow.history.forward(); } catch(e) {} }
+function brRefresh() { const f = brGetFrame(brActiveTab); if(f && f.src) f.src = f.src; }
+function brHome() { brShowWelcome(brActiveTab); }
+function brTab() { let u = document.getElementById('brurl').value.trim(); if(!u.startsWith('http')) u = 'https://' + u; window.open(u, '_blank'); }
+function brOpenUrl(u) { brNavigate(u); }
 
 // YOUTUBE - nocookie embeds + Invidious search
 
